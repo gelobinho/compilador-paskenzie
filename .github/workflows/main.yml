@@ -17,7 +17,7 @@ jobs:
     # 2. Compila linkando o arquivo hashMack.o
     - name: Compilar Código
       run: |
-        gcc -Wall -Wno-unused-result -g -Og compilador.c hashMack.o -o compilador -lm
+        gcc -Wall -Wno-unused-result -g -Og main.c hashMack.o -o compilador -lm
 
     # 3. Dá permissão de execução e roda o programa
     - name: Executar Compilador
