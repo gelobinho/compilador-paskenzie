@@ -1,0 +1,26 @@
+name: Testar Compilador PasKenzie
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Permite rodar manualmente clicando num botão
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest  # Usa Linux, compatível com hashMack.o
+
+    steps:
+    # 1. Baixa o código
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    # 2. Compila linkando o arquivo hashMack.o
+    - name: Compilar Código
+      run: |
+        gcc -Wall -Wno-unused-result -g -Og compilador.c hashMack.o -o compilador -lm
+
+    # 3. Dá permissão de execução e roda o programa
+    - name: Executar Compilador
+      run: |
+        chmod +x compilador
+        ./compilador compilador.txt
