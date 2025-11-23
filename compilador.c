@@ -1,3 +1,6 @@
+//Kaue Henrique Matias Alves | RA: 10417894
+//Victor Maki Tarcha | RA: 10419861
+
 #include <math.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -787,4 +790,5 @@ void factor() {
         printf("\tCRCT 0\n");
         consome(FALSE_TOKEN);
     }
+
 }
