@@ -195,3 +195,12 @@ A fase 2 exige que:
 ---
 
 Mudança 5 — Inicialização do compilador
+
+
+
+
+
+Como Compilar:
+
+gcc -Wall -Wno-unused-result -g -Og main.c hashMack.o -o compilador -lm
+./compilador 
