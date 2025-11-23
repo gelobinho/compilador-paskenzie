@@ -8,7 +8,7 @@
 // DEFINIÇÕES E ESTRUTURAS (LÉXICO + SEMÂNTICO)
 // ============================================================================
 
-// Tabela Hash (Fase 2)
+// Tabela Hash
 #define PRIME_NUMER 211 
 
 typedef enum{
@@ -34,7 +34,7 @@ typedef struct{
     } atributo; 
 } TInfoAtomo; 
 
-// Estrutura da Tabela de Símbolos (Fase 2)
+// Estrutura da Tabela de Símbolos
 typedef struct _TNo {
     char ID[16];
     int endereco;
@@ -53,8 +53,8 @@ TInfoAtomo lookahead;
 
 // Globais para Semântico e Geração de Código
 TTabelaSimbolos tabelaSimbolos;
-int endereco_global = 0; // Conta endereços (0, 1, 2...)
-int cont_rotulo = 1;     // Conta rótulos (L1, L2...)
+int endereco_global = 0; // Conta endereços 
+int cont_rotulo = 1;     // Conta rótulos 
 
 // ============================================================================
 // DECLARAÇÃO DAS FUNÇÕES
@@ -70,8 +70,7 @@ void reconhece_qualquer(TInfoAtomo *infoAtomo);
 void consome(TAtomo esperado);
 void reconhece_comentario(TInfoAtomo *infoAtomo);
 
-// Semântico e Utilitários (Fase 2)
-// IMPORTANTE: Esta função vem do arquivo hashMack.o ou hashMack.obj
+// Semântico e Utilitários
 int hashMack(char *s); 
 
 void init_tabela_simbolos();
@@ -81,7 +80,7 @@ void imprime_tabela_simbolos();
 int proximo_rotulo();
 void erro_semantico(int linha, char *msg);
 
-// Sintático + Geração de Código (Fase 2)
+// Sintático + Geração de Código 
 void program();
 void block();
 void variable_declaration_part();
@@ -108,7 +107,7 @@ void multiplying_operator();
 int main(int argc, char *argv[]) {
     char *nomeArquivo;
 
-    // Lógica para facilitar uso no GDB Online ou IDEs sem configuração de argumentos
+    
     if (argc < 2) {
         nomeArquivo = "compilador.txt"; // Nome padrão para debug/testes
         printf(">>> Aviso: Nenhum arquivo passado na linha de comando.\n");
@@ -149,7 +148,7 @@ int main(int argc, char *argv[]) {
     lookahead = obter_atomo();
     program(); // Inicia análise e compilação
 
-    // Se chegou aqui, não houve erro fatal
+    // Sem erro
     imprime_tabela_simbolos();
 
     return 0;
@@ -159,8 +158,6 @@ int main(int argc, char *argv[]) {
 // IMPLEMENTAÇÃO: SEMÂNTICO E AUXILIARES (Fase 2)
 // ============================================================================
 
-// REMOVIDA: A função hashMack não é mais implementada aqui.
-// Ela será linkada externamente do arquivo hashMack.o
 
 void init_tabela_simbolos() {
     for (int i = 0; i < PRIME_NUMER; i++) {
@@ -218,7 +215,7 @@ void imprime_tabela_simbolos() {
     for (int i = 0; i < PRIME_NUMER; i++) {
         TNo *p = tabelaSimbolos.entradas[i];
         while (p != NULL) {
-            // Formatação ajustada conforme a imagem do professor
+        
             printf("Entrada Tabela Simbolos: [%d]\n", i);
             printf("=> %s | Endereco: %d\n", p->ID, p->endereco);
             p = p->prox;
@@ -231,7 +228,7 @@ void imprime_tabela_simbolos() {
 // ============================================================================
 
 const char* simbolo_real(TAtomo a) {
-    // Mantida apenas para fins de debug de erro sintático
+    // debug de erro sintático
     switch(a) {
         case ABRE_PAR: return "(";
         case FECHA_PAR: return ")";
@@ -321,11 +318,10 @@ TInfoAtomo obter_atomo() {
 void reconhece_numero(TInfoAtomo *infoAtomo){
     char *ini_lexema = buffer;
     
-    // Simplificado para o escopo do projeto (inteiros)
+    // inteiros
     while (isdigit(*buffer)) buffer++;
 
-    // Verifica notação científica simplificada se necessário, mas o foco é int simples
-    // Mantendo a lógica básica
+    // Verifica notação científica
     if (*buffer == 'd') {
         buffer++;
         if (*buffer == '+' || *buffer == '-') buffer++;
@@ -336,11 +332,10 @@ void reconhece_numero(TInfoAtomo *infoAtomo){
     strncpy(lexema, ini_lexema, tamanho);
     lexema[tamanho] = '\0';
     
-    // Tratamento para notação científica 'd' -> converter para 'e' para atof se necessário
-    // Mas para o trabalho, vamos assumir conversão direta ou int
+
     for(int k=0; k<tamanho; k++) if(lexema[k]=='d') lexema[k]='e';
     
-    infoAtomo->atributo.numero = (int)atof(lexema); // Casting para int conforme especificação
+    infoAtomo->atributo.numero = (int)atof(lexema); // Casting para int
     infoAtomo->atomo = CONSTINT;
 }
     
@@ -431,7 +426,7 @@ void reconhece_qualquer(TInfoAtomo *infoAtomo){
 }
 
 // ============================================================================
-// ANALISADOR SINTÁTICO + GERAÇÃO DE CÓDIGO (Fase 2)
+// ANALISADOR SINTÁTICO + GERAÇÃO DE CÓDIGO 
 // ============================================================================
 
 void consome(TAtomo esperado) {
@@ -449,7 +444,7 @@ void consome(TAtomo esperado) {
 
 // <program> ::= program identifier ‘;‘ <block> ‘.’ 
 void program() {
-    printf("INPP\n"); // Código MEPA: Início Programa
+    printf("INPP\n"); // Início Programa
 
     while(lookahead.atomo == COMENTARIO) lookahead = obter_atomo();
     
@@ -461,14 +456,14 @@ void program() {
     
     consome(PONTO);
     
-    printf("PARA\n"); // Código MEPA: Fim Programa
+    printf("PARA\n"); //Fim Programa
 }
 
 // <block> ::= <variable_declaration_part> <statement_part> 
 void block(){
     variable_declaration_part();
     
-    // Geração de Código: Reserva memória para variáveis
+    
     // endereco_global contém a quantidade total de variáveis declaradas
     if (endereco_global > 0) {
         printf("\tAMEM %d\n", endereco_global);
@@ -493,7 +488,7 @@ void variable_declaration_part() {
 
 // <variable_declaration> ::= identifier { ‘,’ identifier } ‘:’ <type>
 void variable_declaration() {
-    // Declaração Semântica: Inserir na tabela
+    // Inserir na tabela
     if (lookahead.atomo == IDENTIFICADOR) {
         insere_simbolo(lookahead.atributo.id, lookahead.linha);
         consome(IDENTIFICADOR);
@@ -551,7 +546,7 @@ void assignment_statement(){
     char id[16];
     strcpy(id, lookahead.atributo.id); // Guarda o ID para buscar depois
     
-    // Semântico: Verifica se existe
+    // Verifica se existe
     int end = busca_simbolo(id);
     if (end == -1) {
         char msg[100];
@@ -563,7 +558,7 @@ void assignment_statement(){
     consome(ATRIBUICAO);
     expression();
     
-    // Geração de Código: Armazena topo da pilha no endereço
+    // Armazena topo da pilha no endereço
     printf("\tARMZ %d\n", end);
 }
 
@@ -603,8 +598,7 @@ void read_statement() {
 }
 
 // <write_statement> ::= write '(' identifier { ',' identifier } ')'
-// Nota: A gramática original do PDF 2 pede identifier, mas geralmente write aceita expressões. 
-// O PDF 1 diz "write '(' identifier ...". Vamos seguir estritamente o PDF 2 (Identifier).
+
 void write_statement() {
     consome(WRITE);
     consome(ABRE_PAR);
@@ -651,7 +645,7 @@ void if_statement() {
     
     statement();
     
-    printf("\tDSVS L%d\n", L2); // Desvio Incondicional (para pular o else)
+    printf("\tDSVS L%d\n", L2); // para pular o else
     printf("L%d:\tNADA\n", L1);
     
     if (lookahead.atomo == ELSE) { 
@@ -708,7 +702,7 @@ void expression() {
 }
 
 void relational_operator() {
-    // Apenas consome, a lógica de geração está em expression()
+
     if (lookahead.atomo == MENOR || lookahead.atomo == MAIOR || lookahead.atomo == MENOR_IGUAL ||
         lookahead.atomo == MAIOR_IGUAL || lookahead.atomo == NEGACAO || lookahead.atomo == IGUAL ||
         lookahead.atomo == OR || lookahead.atomo == AND) {
