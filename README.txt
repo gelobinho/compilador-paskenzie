@@ -1,55 +1,197 @@
-Compilador PasKenzie - Fase 2:
-Análise Semântica e Geração de Código Intermediário
+1. Objetivo da Fase 2
 
-Grupo:
-Kaue Henrique Matias Alves | RA: 10417894
-Victor Maki Tarcha | RA: 10419861
+Nesta fase incluimos:
 
-Visão Geral do Projeto
+- Analisador Semântico completo, com:
 
-Este trabalho implementa a segunda etapa do compilador para a linguagem PasKenzie. Baseado na estrutura léxica e sintática validada na Fase 1, adicionamos agora a Análise Semântica (verificação de declaração e unicidade de variáveis) e a Geração de Código para a máquina hipotética MEPA.
+- Tabela de símbolos (hash)
 
-O compilador agora não apenas valida a gramática, mas também traduz o código-fonte para instruções de pilha e gerencia uma Tabela de Símbolos utilizando Hashing.
+- Detecção de variáveis não declaradas
 
-Compilação e Execução
+- Detecção de variáveis duplicadas
 
-Para a compilação desta fase, é necessário linkar o arquivo objeto fornecido (hashMack.o ou hashMack.obj) que contém a implementação da função de hash.
+- Endereçamento de variáveis (endereços inteiros)
 
-Comando de Compilação (Linux/WSL):
-gcc -Wall -Wno-unused-result -g -Og compilador.c hashMack.o -o compilador
+- Geração de Código MEPA, incluindo:
 
-Comando de Compilação (Windows/MinGW):
-gcc -Wall -Wno-unused-result -g -Og compilador.c hashMack.obj -o compilador
+- INPP, PARA
 
-Como Executar:
-./compilador <arquivo_fonte.txt>
+- AMEM, ARMZ, CRVL, CRCT
 
-Decisões de Design e Implementação
+- Operações aritméticas e relacionais
 
-1. Estrutura Incremental (Tradução Dirigida pela Sintaxe): Mantivemos a arquitetura do Analisador Descendente Recursivo da Fase 1. As verificações semânticas e a emissão de código MEPA foram inseridas diretamente nas funções sintáticas, executando de forma entrelaçada à análise gramatical.
+- LEIT, IMPR
 
-2. Tabela de Símbolos (Hash Table): Implementamos uma tabela de dispersão com tratamento de colisões por encadeamento. O endereçamento das variáveis é sequencial (0, 1, 2...), controlado pela variável global 'proximo_endereco'.
+- DESVIO condicional: DSVF
 
-3. Tratamento de Erros: Implementamos uma estratégia de "Panic Mode" simplificada. Ao encontrar o primeiro erro — seja ele Léxico (símbolo inválido), Sintático (token inesperado) ou Semântico (variável não declarada ou duplicada) — o compilador exibe uma mensagem detalhada contendo a linha e o tipo do erro, e encerra imediatamente a execução (exit 1), prevenindo a geração de código inválido.
+- DESVIO incondicional: DSVS
 
-4. Geração de Rótulos: Para comandos de controle de fluxo, criamos a função auxiliar proximo_rotulo(), garantindo unicidade nos desvios condicionais.
+- Controle de rótulos (L1, L2…)
 
-Detalhes Técnicos e Justificativas
+- Ajustes no parser para acoplamento com o código MEPA
 
-1. Remoção do Rastreio Léxico: Diferente da Fase 1, removemos a impressão dos tokens ("# linha: token") dentro da função consome(), mantendo a saída limpa conforme a exigência de imprimir apenas as instruções MEPA e a Tabela de Símbolos final.
+2. O que foi implementado nesta fase
+2.1 Tabela de Símbolos com Hash
 
-2. Tratamento de Variáveis:
-   - Declaração: Ao encontrar "var", contamos quantas variáveis são declaradas para emitir uma única instrução "AMEM n".
-   - Uso: Em comandos como "read" ou atribuições, buscamos o endereço na tabela. Se a variável não existe, o compilador aborta com erro semântico imediato.
+Estrutura hash baseada no código fornecido pelo professor (hashMack()).
 
-3. Tipagem: Como o enunciado simplifica o escopo para tratar apenas inteiros na geração de código, tratamos internamente tipos 'char' como inteiros na emissão das instruções 'CRCT'.
+Cada variável declarada é inserida com:
 
-4. Identificadores Longos (Truncamento): Caso um identificador exceda o limite de 15 caracteres, optamos por truncar o nome para os primeiros 15 caracteres válidos em vez de emitir um erro léxico fatal. Isso garante robustez na análise, permitindo que o compilador processe a parte significativa do nome.
+Nome
 
-5. Abrangência das Estruturas (Factor e If): Notamos que os exemplos do enunciado cobriam apenas um subconjunto da gramática (inteiros e IDs). Para garantir que o compilador continuasse aceitando toda a sintaxe definida na Fase 1 (incluindo 'char', 'true'/'false' e 'not'), expandimos a lógica dessas funções para cobrir todas as possibilidades da gramática EBNF, tratando internamente esses tipos como valores inteiros na MEPA.
+Endereço (inteiro crescente)
 
-Desafios Encontrados e Soluções
+Detecção de variáveis duplicadas → erro semântico.
 
-1. Linkagem Externa: Tivemos problemas iniciais para compilar devido à dependência do arquivo objeto externo (hashMack). Resolvemos declarando explicitamente o protótipo "extern int hashMack(char * s);" e ajustando a linha de comando do GCC.
+Detecção de variáveis não declaradas no uso → erro semântico.
 
-2. Ordem das Instruções no IF/ELSE: Foi necessário cuidado redobrado na lógica de geração dos rótulos (Labels) no comando IF, garantindo que o rótulo de saída fosse impresso corretamente tanto no fluxo do THEN quanto no do ELSE para manter a coerência da MEPA.
+2.2 Controle de Endereços
+
+Cada nova variável recebe um endereço sequencial:
+
+x → 0
+y → 1
+z → 2
+...
+
+
+Após terminar as declarações, gera-se:
+
+AMEM <quantidade_de_variaveis>
+
+2.3 Geração de Código MEPA para expressões
+
+Inclui:
+
+CRCT n
+
+CRVL endereco
+
+Operadores:
+
+SOMA → SOMA
+SUBT → SUBT
+MULT → MULT
+DIV  → DIVI / DIV
+
+
+Operadores relacionais:
+
+=   → CMIG
+<>  → CMDG
+<   → CMME
+>   → CMMA
+<=  → CMEG
+>=  → CMAG
+OR  → DISJ
+AND → CONJ
+
+2.4 Geração de Código para comandos
+
+Atribuição
+
+CRVL x
+CRCT 1
+SOMA
+ARMZ x
+
+
+Read
+
+LEIT
+ARMZ endereco
+
+
+Write
+
+CRVL endereco
+IMPR
+
+
+If-Then-Else
+
+<expr>
+DSVF L1
+<comando>
+DSVS L2
+
+
+L1: NADA
+<else>
+L2: NADA
+
+- While
+
+
+L1: NADA
+<expr>
+DSVF L2
+<statement>
+DSVS L1
+L2: NADA
+
+
+2.5 Controle de Rótulos
+- Rotulador incremental (L1, L2, L3…)
+- Utilizado em if/else/while
+
+---
+
+3. O que foi necessário adaptar da Fase 1 para a Fase 2
+
+Mudança 1 — O parser agora não imprime tokens
+Na fase 1, cada `consome()` imprimia:
+
+5:identifier : x
+8:integer
+Na fase 2 o `consome()` foi reescrito para:
+- não imprimir tokens
+- coordenar a leitura de átomos
+- permitir encaixar geração de código imediatamente após reconhecer estruturas.
+
+---
+
+Mudança 2 — Inclusão da Tabela de Símbolos
+O parser foi modificado para:
+
+- Inserir variáveis na declaração:
+
+
+insere_simbolo(...)
+
+- Verificar variáveis no uso:
+
+
+busca_simbolo(...)
+
+
+Ou seja, o analisador sintático agora conversa com o analisador semântico.
+
+---
+
+Mudança 3 — Código MEPA acoplado ao parser
+Funções como:
+
+- `assignment_statement()`
+- `expression()`
+- `if_statement()`
+- `while_statement()`
+
+foram reescritas para:
+
+- analisar sintaticamente  
+- verificar semântica  
+- produzir MEPA na mesma passagem  
+
+---
+
+Mudança 4 — Correções na gramática
+A fase 2 exige que:
+
+- `write` aceite identificadores, não expressões
+- `variable_declaration_part()` feche corretamente com `;`
+- `expression()` gere MEPA
+
+---
+
+Mudança 5 — Inicialização do compilador
